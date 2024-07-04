@@ -9,7 +9,7 @@ const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
 const Review= require("../MAJORPROJECT/models/review");
 
-const { listingSchema } = require("./schema.js");
+const { listingSchema, reviewSchema } = require("./schema.js");
 
 const MONGO_URL="mongodb://127.0.0.1:27017/wanderlust";
 
@@ -39,6 +39,17 @@ app.get("/", (req, res) => {
 
 const validateListing = (req, res, next) => {
     let { error } = listingSchema.validate(req.body);
+    if (error) {
+      let errMsg = error.details.map((el) => el.message).join(",");
+      throw new ExpressError(400, errMsg);
+    } else {
+      next();
+    }
+  };
+
+
+  const validateReview = (req, res, next) => {
+    let { error } = reviewSchema.validate(req.body);
     if (error) {
       let errMsg = error.details.map((el) => el.message).join(",");
       throw new ExpressError(400, errMsg);
@@ -121,7 +132,7 @@ app.get(
 // Review Route
 // POST Route
 
-app.post("/listings/:id/reviews", async(req, res)=>{
+app.post("/listings/:id/reviews", validateReview,  wrapAsync(async(req, res)=>{
   let listing= await Listing.findById(req.params.id);
   let newReview= new Review(req.body.review);
   listing.reviews.push(newReview);
@@ -130,7 +141,7 @@ app.post("/listings/:id/reviews", async(req, res)=>{
   await listing.save();
   res.redirect(`/listings/${listing._id}`);
 
-})
+}))
 
 
 
