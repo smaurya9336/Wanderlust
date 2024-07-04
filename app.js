@@ -7,6 +7,7 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
+const Review= require("../MAJORPROJECT/models/review");
 
 const { listingSchema } = require("./schema.js");
 
@@ -116,6 +117,21 @@ app.get(
       res.redirect("/listings");
     })
   );
+
+// Review Route
+// POST Route
+
+app.post("/listings/:id/reviews", async(req, res)=>{
+  let listing= await Listing.findById(req.params.id);
+  let newReview= new Review(req.body.review);
+  listing.reviews.push(newReview);
+
+  await newReview.save();
+  await listing.save();
+  res.redirect(`/listings/${listing._id}`);
+
+})
+
 
 
 // app.get("/testListing", async (req, res)=>{
