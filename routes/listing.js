@@ -6,12 +6,6 @@ const wrapAsync = require("../utils/wrapAsync.js");
 const { isLoggedIn, isOwner, validateListing} = require("../middleware.js");
 
 
-
-
-
-
-
-
 // Index Route
 router.get(
     "/",
@@ -37,14 +31,18 @@ router.get(
     "/:id",
     wrapAsync(async (req, res) => {
       let { id } = req.params;
-      const listing = await Listing.findById(id)
-      .populate("reviews")
-      .populate("owner");
+      const listing = await Listing.findById(req.params.id).populate("owner").populate({
+        path: "reviews",
+        populate:{
+          path: "author",
+        }
+      });
+    
       if(!listing){
         req.flash("error", "Listing you requested for does not exist!");
         res.redirect("/listings");
       }
-      console.log(listing);
+      // console.log(listing);
       res.render("../views/listings/show.ejs", { listing });
     })
   );
@@ -102,7 +100,7 @@ router.get(
     wrapAsync(async (req, res) => {
       let { id } = req.params;
       let deletedListing = await Listing.findByIdAndDelete(id);
-      console.log(deletedListing);
+    
       req.flash("success","Listing Deleted!");
       res.redirect("/listings");
     })
